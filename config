@@ -1,0 +1,6 @@
+end_teleport:
+  world: "game_the_end"
+  coordinates:
+    x: 100.0 
+    y: 70.0 
+    z: 200.0
