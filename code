@@ -1,0 +1,91 @@
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+
+public class EndPortalTeleport extends JavaPlugin implements Listener, CommandExecutor {
+
+    private String targetWorldName;
+    private double targetX;
+    private double targetY;
+    private double targetZ;
+
+    @Override
+    public void onEnable() {
+        // Сохраняем файл конфигурации, если он не существует
+        saveDefaultConfig();
+        loadConfig();
+        Bukkit.getPluginManager().registerEvents(this, this);
+        getCommand("EnderSpawn").setExecutor(this);
+    }
+
+    @Override
+    public void onDisable() {
+    }
+
+    private void loadConfig() {
+        FileConfiguration config = getConfig();
+        targetWorldName = config.getString("end_teleport.world", "game_the_end");
+        targetX = config.getDouble("end_teleport.coordinates.x", 100.0);
+        targetY = config.getDouble("end_teleport.coordinates.y", 70.0);
+        targetZ = config.getDouble("end_teleport.coordinates.z", 200.0);
+    }
+
+    @EventHandler
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
+        if (event.getCause() == PlayerTeleportEvent.TeleportCause.END_PORTAL) {
+            World endWorld = Bukkit.getWorld(targetWorldName);
+            if (endWorld != null) {
+                Location targetLocation = new Location(endWorld, targetX, targetY, targetZ);
+                event.setTo(targetLocation);
+                event.setCancelled(true);
+                event.getPlayer().teleport(targetLocation);
+            }
+        }
+    }
+
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (command.getName().equalsIgnoreCase("EnderSpawn")) {
+            if (sender instanceof Player) {
+                Player player = (Player) sender;
+                if (!player.isOp()) {
+                    player.sendMessage("You don't have permission to use this command.");
+                    return true;
+                }
+                if (args.length == 4) {
+                    String worldName = args[0];
+                    double x = Double.parseDouble(args[1]);
+                    double y = Double.parseDouble(args[2]);
+                    double z = Double.parseDouble(args[3]);
+
+                    // Обновляем конфигурацию
+                    FileConfiguration config = getConfig();
+                    config.set("end_teleport.world", worldName);
+                    config.set("end_teleport.coordinates.x", x);
+                    config.set("end_teleport.coordinates.y", y);
+                    config.set("end_teleport.coordinates.z", z);
+                    saveConfig();
+                    loadConfig();
+
+                    player.sendMessage("End teleport coordinates set to world: " + worldName + " x: " + x + " y: " + y + " z: " + z);
+                    return true;
+                } else {
+                    player.sendMessage("Usage: /EnderSpawn <world> <x> <y> <z>");
+                }
+            } else {
+                sender.sendMessage("This command can only be used by a player.");
+            }
+        }
+        return false;
+    }
+}
