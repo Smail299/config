@@ -1,0 +1,7 @@
+name: FIchaEnderSpawn
+version: 1.0
+main: com.yourcompany.EndPortalTeleport
+commands:
+  EnderSpawn:
+    description: Set the teleport coordinates for the End portal.
+    usage: /EnderSpawn <world> <x> <y> <z>
